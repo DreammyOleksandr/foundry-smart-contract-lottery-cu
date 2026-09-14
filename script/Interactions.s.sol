@@ -5,6 +5,7 @@ import {Script, console2} from "forge-std/Script.sol";
 import {HelperConfigurator, WithConstants} from "script/HelperConfigurator.s.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "test/mocks/LinkToken.sol";
+import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 uint256 constant SUBSCRIPTION_FUND_AMOUNT = 3 ether;
 
@@ -61,5 +62,21 @@ contract FundSubscriptionManager is Script, WithConstants {
 }
 
 contract AddConsumerManager is Script, WithConstants {
-    
+    function addByConfig(address mostRecentlyDeployed) public {
+        HelperConfigurator configurator = new HelperConfigurator();
+        address vrfCoordinator = configurator.getConfig().vrfCoordinator;
+        uint256 subscriptionId = configurator.getConfig().subscriptionId;
+    }
+
+    function add(address consumer, address vrfCoordinator, uint256 subscriptionId) public {
+        console2.log("Adding consumer", consumer, "to vrfCoordinator", vrfCoordinator, "on chain id:", block.chainid);
+        vm.startBroadcast();
+        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(subscriptionId, consumer);
+        vm.stopBroadcast();
+    }
+
+    function run() external {
+        address mostRecentlyDeployed = DevOpsTools.get_most_recently_deployed_address("Raffle", block.chainid);
+        addByConfig(mostRecentlyDeployed);
+    }
 }
