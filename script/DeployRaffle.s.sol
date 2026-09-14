@@ -5,7 +5,7 @@ import {Script} from "forge-std/Script.sol";
 
 import {Raffle} from "src/Raffle.sol";
 import {HelperConfigurator} from "script/HelperConfigurator.s.sol";
-import {SubscriptionManager} from "script/Interactions.s.sol";
+import {CreateSubscriptionManager} from "script/Interactions.s.sol";
 
 contract DeployRaffle is Script {
     function run() external {
@@ -17,7 +17,7 @@ contract DeployRaffle is Script {
         HelperConfigurator.NetworkConfig memory config = helperConfigurator.getConfig();
 
         if (config.subscriptionId == 0) {
-            SubscriptionManager subscriptionManager = new SubscriptionManager();
+            CreateSubscriptionManager subscriptionManager = new CreateSubscriptionManager();
             (config.subscriptionId, config.vrfCoordinator) = subscriptionManager.create(config.vrfCoordinator);
         }
 

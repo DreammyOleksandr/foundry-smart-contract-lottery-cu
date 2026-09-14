@@ -2,10 +2,13 @@
 pragma solidity ^0.8.30;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {HelperConfigurator} from "script/HelperConfigurator.s.sol";
+import {HelperConfigurator, WithConstants} from "script/HelperConfigurator.s.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
+import {LinkToken} from "test/mocks/LinkToken.sol";
 
-contract SubscriptionManager is Script {
+uint256 constant SUBSCRIPTION_FUND_AMOUNT = 3 ether;
+
+contract CreateSubscriptionManager is Script {
     function createByConfig() public returns (uint256, address) {
         HelperConfigurator configurator = new HelperConfigurator();
         address vrfCoordinator = configurator.getConfig().vrfCoordinator;
@@ -24,5 +27,39 @@ contract SubscriptionManager is Script {
         return (subscriptionId, vrfCoordinator);
     }
 
-    function run() public {}
+    function run() public {
+        createByConfig();
+    }
+}
+
+contract FundSubscriptionManager is Script, WithConstants {
+    function fundByConfig() public {
+        HelperConfigurator configurator = new HelperConfigurator();
+        address vrfCoordinator = configurator.getConfig().vrfCoordinator;
+        uint256 subscriptionId = configurator.getConfig().subscriptionId;
+        address linkToken = configurator.getConfig().link;
+        fund(vrfCoordinator, subscriptionId, linkToken);
+    }
+
+    function fund(address vrfCoordinator, uint256 subscriptionId, address linkToken) public {
+        console2.log("Funding subscription", subscriptionId, "on chain id:", block.chainid);
+
+        if (block.chainid == LOCAL_CHAIN_ID) {
+            vm.startBroadcast();
+            VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(subscriptionId, SUBSCRIPTION_FUND_AMOUNT);
+            vm.stopBroadcast();
+        } else {
+            vm.startBroadcast();
+            LinkToken(linkToken).transferAndCall(vrfCoordinator, SUBSCRIPTION_FUND_AMOUNT, abi.encode(subscriptionId));
+            vm.stopBroadcast();
+        }
+    }
+
+    function run() public {
+        fundByConfig();
+    }
+}
+
+contract AddConsumerManager is Script, WithConstants {
+    
 }
