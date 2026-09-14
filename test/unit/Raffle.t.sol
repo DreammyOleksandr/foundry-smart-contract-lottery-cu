@@ -2,9 +2,12 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {Raffle, State} from "src/Raffle.sol";
+import {Raffle, State, Raffle__NotEnoughETH, Raffle__NotIdle} from "src/Raffle.sol";
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {HelperConfigurator} from "script/HelperConfigurator.s.sol";
+
+event EnteredRaffle(address indexed player);
+event WinnerPicked(address indexed winner);
 
 contract RaffleTest is Test {
     Raffle public raffle;
@@ -33,7 +36,29 @@ contract RaffleTest is Test {
         subscriptionId = config.subscriptionId;
     }
 
-    function testRaffleStartsAsIdle() public {
-        assert(raffle.getRaffleState() == State.IDLE);
+    function testRaffleStartsAsIdle() public view {
+        assert(raffle.getState() == State.IDLE);
+    }
+
+    function testRevertsWhenEnteranceFeeIsNotEnough() public {
+        vm.expectRevert(Raffle__NotEnoughETH.selector);
+        raffle.enterRaffle();
+    }
+
+    function testRaffleRecordsPlayersEnter() public {
+        vm.prank(player);
+
+        raffle.enterRaffle{value: entranceFee}();
+
+        assert(raffle.getPlayers().length == 1);
+        assert(raffle.getPlayers()[0] == player);
+    }
+
+    function testExpectEmittedEnteredRaffleOnRaffleEnter() public {
+        vm.prank(player);
+
+        vm.expectEmit(true, false, false, false, address(raffle));
+        emit EnteredRaffle(player);
+        raffle.enterRaffle{value: entranceFee}();
     }
 }
