@@ -12,7 +12,7 @@ contract DeployRaffle is Script {
         vm.stopBroadcast();
     }
 
-    function deployContract() internal returns (Raffle, HelperConfig) {
+    function deployContract() public returns (Raffle, HelperConfigurator) {
         HelperConfigurator helperConfigurator = new HelperConfigurator();
         HelperConfigurator.NetworkConfig memory config = helperConfigurator.getConfig();
         Raffle raffle = new Raffle({

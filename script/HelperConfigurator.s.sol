@@ -9,7 +9,7 @@ error HelperConfig__InvalidChainId(uint256 chainId);
 abstract contract WithConstants {
     uint96 public constant MOCK_BASE_FEE = 0.25 ether;
     uint96 public constant MOCK_GAS_PRICE_LINK = 1e9;
-    uint96 public constant MOCK_WEI_PER_UNIT_LINK = 4e15;
+    int256 public constant MOCK_WEI_PER_UNIT_LINK = 4e15;
 
     uint256 public constant SEPOLIA_CHAIN_ID = 11155111;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
@@ -32,11 +32,11 @@ contract HelperConfigurator is Script, WithConstants {
         networkConfigs[SEPOLIA_CHAIN_ID] = getSepoliaEthConfig();
     }
 
-    function getConfig() public view returns (NetworkConfig memory) {
+    function getConfig() public returns (NetworkConfig memory) {
         return getNetworkConfig(block.chainid);
     }
 
-    function getNetworkConfig(uint256 chainId) public view returns (NetworkConfig memory) {
+    function getNetworkConfig(uint256 chainId) public returns (NetworkConfig memory) {
         if (networkConfigs[chainId].vrfCoordinator == address(0)) {
             revert HelperConfig__InvalidChainId(chainId);
         }
@@ -59,7 +59,7 @@ contract HelperConfigurator is Script, WithConstants {
         });
     }
 
-    function getOrCreateAnvilConfig() public view returns (NetworkConfig memory) {
+    function getOrCreateAnvilConfig() public returns (NetworkConfig memory) {
         if (networkConfigs[LOCAL_CHAIN_ID].vrfCoordinator != address(0)) {
             return networkConfigs[LOCAL_CHAIN_ID];
         }

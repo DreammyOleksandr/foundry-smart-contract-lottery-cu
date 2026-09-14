@@ -2,7 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {Raffle} from "src/Raffle.sol";
+import {Raffle, State} from "src/Raffle.sol";
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {HelperConfigurator} from "script/HelperConfigurator.s.sol";
 
@@ -24,11 +24,16 @@ contract RaffleTest is Test {
         DeployRaffle deployer = new DeployRaffle();
         (raffle, helperConfig) = deployer.deployContract();
         vm.deal(player, STARTING_BALANCE);
-        (entranceFee, secondsInterval, vrfCoordinator, gasLane, callbackGasLimit, subscriptionId) =
-            helperConfig.getConfig();
+        HelperConfigurator.NetworkConfig memory config = helperConfig.getConfig();
+        entranceFee = config.entranceFee;
+        secondsInterval = config.secondsInterval;
+        vrfCoordinator = config.vrfCoordinator;
+        gasLane = config.gasLane;
+        callbackGasLimit = config.callbackGasLimit;
+        subscriptionId = config.subscriptionId;
     }
 
     function testRaffleStartsAsIdle() public {
-        assert(raffle.getRaffleState() == Raffle.State.IDLE);
+        assert(raffle.getRaffleState() == State.IDLE);
     }
 }
