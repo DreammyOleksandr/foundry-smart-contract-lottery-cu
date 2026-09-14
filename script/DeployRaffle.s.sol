@@ -7,14 +7,13 @@ import {HelperConfigurator} from "script/HelperConfigurator.s.sol";
 
 contract DeployRaffle is Script {
     function run() external {
-        vm.startBroadcast();
         deployContract();
-        vm.stopBroadcast();
     }
 
     function deployContract() public returns (Raffle, HelperConfigurator) {
         HelperConfigurator helperConfigurator = new HelperConfigurator();
         HelperConfigurator.NetworkConfig memory config = helperConfigurator.getConfig();
+        vm.startBroadcast();
         Raffle raffle = new Raffle({
             _enteranceFee: config.entranceFee,
             _secondsInterval: config.secondsInterval,
@@ -23,6 +22,7 @@ contract DeployRaffle is Script {
             _subscriptionId: config.subscriptionId,
             _callbackGasLimit: config.callbackGasLimit
         });
+        vm.stopBroadcast();
         return (raffle, helperConfigurator);
     }
 }

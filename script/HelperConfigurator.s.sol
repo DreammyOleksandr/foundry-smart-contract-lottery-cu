@@ -37,12 +37,12 @@ contract HelperConfigurator is Script, WithConstants {
     }
 
     function getNetworkConfig(uint256 chainId) public returns (NetworkConfig memory) {
-        if (networkConfigs[chainId].vrfCoordinator == address(0)) {
-            revert HelperConfig__InvalidChainId(chainId);
-        }
-
         if (chainId == LOCAL_CHAIN_ID) {
             return getOrCreateAnvilConfig();
+        }
+
+        if (networkConfigs[chainId].vrfCoordinator == address(0)) {
+            revert HelperConfig__InvalidChainId(chainId);
         }
 
         return networkConfigs[chainId];
@@ -60,8 +60,8 @@ contract HelperConfigurator is Script, WithConstants {
     }
 
     function getOrCreateAnvilConfig() public returns (NetworkConfig memory) {
-        if (networkConfigs[LOCAL_CHAIN_ID].vrfCoordinator != address(0)) {
-            return networkConfigs[LOCAL_CHAIN_ID];
+        if (localNetworkConfig.vrfCoordinator != address(0)) {
+            return localNetworkConfig;
         }
 
         vm.startBroadcast();
