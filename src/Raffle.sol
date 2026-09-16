@@ -13,6 +13,7 @@ error Raffle__UpkeepNotNeeded(uint256 _balance, uint256 _playersLength, State _s
 
 event EnteredRaffle(address indexed player);
 event WinnerPicked(address indexed winner);
+event WinnerRequested(uint256 indexed requestId);
 
 enum State {
     IDLE, //0
@@ -104,6 +105,8 @@ contract Raffle is VRFConsumerBaseV2Plus {
         });
 
         uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
+
+        emit WinnerRequested(requestId);
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
