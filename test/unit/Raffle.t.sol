@@ -6,6 +6,7 @@ import {Raffle, State, Raffle__NotEnoughETH, Raffle__NotIdle, Raffle__UpkeepNotN
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {HelperConfigurator} from "script/HelperConfigurator.s.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
 event EnteredRaffle(address indexed player);
 event WinnerPicked(address indexed winner);
@@ -128,7 +129,7 @@ contract RaffleTest is Test {
         raffle.pickWinner("");
     }
 
-    function testPickWineerUpdatesStateAndEmitsWinnerRequested() public raffleEntered {
+    function testPickWinnerUpdatesStateAndEmitsWinnerRequested() public raffleEntered {
         vm.recordLogs();
         raffle.pickWinner("");
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -137,5 +138,10 @@ contract RaffleTest is Test {
         State state = raffle.getState();
         assert(state == State.PROCESSING);
         assert(requestId != 0);
+    }
+
+    function testFulfillRandomWordsIsCalledOnlyAfterPickWinner(uint256 randomRequestId) public raffleEntered {
+        vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
+        VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(randomRequestId, address(raffle));
     }
 }
