@@ -2,7 +2,7 @@
 pragma solidity ^0.8.30;
 
 import {Test} from "forge-std/Test.sol";
-import {Raffle, State, Raffle__NotEnoughETH, Raffle__NotIdle} from "src/Raffle.sol";
+import {Raffle, State, Raffle__NotEnoughETH, Raffle__NotIdle, Raffle__UpkeepNotNeeded} from "src/Raffle.sol";
 import {DeployRaffle} from "script/DeployRaffle.s.sol";
 import {HelperConfigurator} from "script/HelperConfigurator.s.sol";
 
@@ -72,5 +72,71 @@ contract RaffleTest is Test {
 
         vm.expectRevert(Raffle__NotIdle.selector);
         raffle.enterRaffle{value: entranceFee}();
+    }
+
+    function testCheckUpkeepReturnsFalseWithInsufficientBalance() public {
+        vm.warp(block.timestamp + secondsInterval + 1);
+        vm.roll(block.number + 1);
+
+        (bool upkeepNeeded,) = raffle.checkUpkeep("");
+
+        assert(!upkeepNeeded);
+    }
+
+    function testCheckUpkeepReturnsFalseIfRaffleIsNotIdle() public {
+        vm.prank(player);
+
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + secondsInterval + 1);
+        vm.roll(block.number + 1);
+        raffle.pickWinner("");
+
+        (bool upkeepNeeded,) = raffle.checkUpkeep("");
+
+        assert(!upkeepNeeded);
+    }
+
+    function testUpkeepReturnsFalseIfEnoughTimeHasNotPassed() public {
+        vm.roll(block.number + 1);
+
+        (bool upkeepNeeded,) = raffle.checkUpkeep("");
+
+        assert(!upkeepNeeded);
+    }
+
+    function testUpkeepReturnsTrueWhenParametersAreMet() public {
+        vm.prank(player);
+
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + secondsInterval + 1);
+        vm.roll(block.number + 1);
+
+        (bool upkeepNeeded,) = raffle.checkUpkeep("");
+
+        assert(upkeepNeeded);
+    }
+
+    function testPickWinnerCanRunOnlyWhenCheckUpkeepReturnsTrue() public {
+        vm.prank(player);
+
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + secondsInterval + 1);
+        vm.roll(block.number + 1);
+
+        raffle.pickWinner("");
+    }
+
+    function testPickWinnerRevertsWhenCheckUpkeepReturnsFalse() public {
+        uint256 currentBalance = 0;
+        uint256 playersLength = 0;
+        State state = raffle.getState();
+
+        vm.prank(player);
+        raffle.enterRaffle{value: entranceFee}();
+        currentBalance += entranceFee;
+        playersLength = 1;
+
+        vm.expectRevert(abi.encodeWithSelector(Raffle__UpkeepNotNeeded.selector, currentBalance, playersLength, state));
+        raffle.pickWinner("");
     }
 }

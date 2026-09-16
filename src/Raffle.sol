@@ -9,7 +9,7 @@ error Raffle__NotEnoughETH();
 error Raffle__FailedToSendETH();
 error Raffle__NotEnoughPlayers();
 error Raffle__NotEnoughTimePassed();
-error Raffle__UpkeepNotNeeded(uint256 _secondsInterval, uint256 _balance, uint256 _playersLength, State _state);
+error Raffle__UpkeepNotNeeded(uint256 _balance, uint256 _playersLength, State _state);
 
 event EnteredRaffle(address indexed player);
 event WinnerPicked(address indexed winner);
@@ -88,7 +88,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     function pickWinner(bytes calldata) external {
         (bool upkeepNeeded,) = checkUpkeep("");
         if (!upkeepNeeded) {
-            revert Raffle__UpkeepNotNeeded(i_secondsInterval, address(this).balance, s_players.length, s_state);
+            revert Raffle__UpkeepNotNeeded(address(this).balance, s_players.length, s_state);
         }
         s_state = State.PROCESSING;
         VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient.RandomWordsRequest({

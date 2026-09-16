@@ -69,14 +69,15 @@ contract AddConsumerManager is Script, WithConstants {
     }
 
     function add(address consumer, address vrfCoordinator, uint256 subscriptionId) public {
-        console2.log("Adding consumer", consumer, "to vrfCoordinator", vrfCoordinator, "on chain id:", block.chainid);
+        console2.log("Adding consumer", consumer, "to vrfCoordinator", vrfCoordinator);
+        console2.log("On chain id:", block.chainid);
         vm.startBroadcast();
         VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(subscriptionId, consumer);
         vm.stopBroadcast();
     }
 
     function run() external {
-        address mostRecentlyDeployed = DevOpsTools.get_most_recently_deployed_address("Raffle", block.chainid);
+        address mostRecentlyDeployed = DevOpsTools.get_most_recent_deployment("Raffle", block.chainid);
         addByConfig(mostRecentlyDeployed);
     }
 }

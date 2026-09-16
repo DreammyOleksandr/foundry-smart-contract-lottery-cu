@@ -21,7 +21,7 @@ contract DeployRaffle is Script {
             (config.subscriptionId, config.vrfCoordinator) = subscriptionManager.create(config.vrfCoordinator);
 
             FundSubscriptionManager fundManager = new FundSubscriptionManager();
-            fundManager.fund(config.vrfCoordinator, config.subscriptionId, config.linkToken);
+            fundManager.fund(config.vrfCoordinator, config.subscriptionId, config.link);
         }
 
         vm.startBroadcast();
@@ -36,7 +36,7 @@ contract DeployRaffle is Script {
         vm.stopBroadcast();
 
         AddConsumerManager addConsumerManager = new AddConsumerManager();
-        addConsumerManager.add(raffle, config.vrfCoordinator, config.subscriptionId);
+        addConsumerManager.add(address(raffle), config.vrfCoordinator, config.subscriptionId);
 
         return (raffle, helperConfigurator);
     }
